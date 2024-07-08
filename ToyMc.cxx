@@ -4,27 +4,31 @@ ClassImp(ToyMc);
 
 ToyMc::ToyMc() : fInTree{nullptr},
                 fOutName{},
+                fNpart{-1.},
+                fNcoll{-1.},
+                fB{-1.},
                 hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
-                hMultAll{"hMultAll", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
-                hMultPileUp{"hMultPileUp", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
-                hMultSingle{"hMultSingle", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
+                hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
+                hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
+                hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
                 fPars{0.5, 10, 10.5, 0.},
                 isInputRead{false},
                 isNbdInit{false},
-                isInit{false},
                 fNev{-1}
 {}
 
 ToyMc::ToyMc(TMCParameters _pars) : fInTree{nullptr},
                 fOutName{},
+                fNpart{-1.},
+                fNcoll{-1.},
+                fB{-1.},
                 hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
-                hMultAll{"hMultAll", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
-                hMultPileUp{"hMultPileUp", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
-                hMultSingle{"hMultSingle", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
+                hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
+                hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
+                hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
                 fPars{},
                 isInputRead{false},
                 isNbdInit{false},
-                isInit{false},
                 fNev{-1}
 {
   SetParameters(_pars);
@@ -32,14 +36,16 @@ ToyMc::ToyMc(TMCParameters _pars) : fInTree{nullptr},
 
 ToyMc::ToyMc(double f, int k, double mu, double p) : fInTree{nullptr},
                 fOutName{},
+                fNpart{-1.},
+                fNcoll{-1.},
+                fB{-1.},
                 hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
-                hMultAll{"hMultAll", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
-                hMultPileUp{"hMultPileUp", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
-                hMultSingle{"hMultSingle", "N_{ch};N_{ch};counts", 10000, 0., 10000.},
+                hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
+                hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
+                hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
                 fPars{},
                 isInputRead{false},
                 isNbdInit{false},
-                isInit{false},
                 fNev{-1}
 {
   SetParameters(f, k, mu, p);
@@ -82,11 +88,6 @@ double ToyMc::NBD(double n, double mu, double k)
   return func;
 }
 
-bool ToyMc::ReadInput()
-{
-  return true;
-}
-
 bool ToyMc::InitNbd()
 {
   if (isNbdInit)
@@ -107,8 +108,6 @@ bool ToyMc::Run()
 {
   if (!fInTree)
     return false;
-
-  float fB{-1.}, fNpart{-1}, fNcoll{-1};
 
   fInTree->SetBranchAddress("B",  &fB);
   fInTree->SetBranchAddress("Npart",  &fNpart);
@@ -131,14 +130,14 @@ bool ToyMc::Run()
     if (fInTree->GetEntry(i) <= 0)
       continue;
     
-    for (int j=0; j<GetNacestors(fNpart, fNcoll); ++j)
+    for (int j=0; j<GetNacestors(); ++j)
       mult += (int)hNbd.GetRandom();
 
     // Generating pile-up
     if (fPars.p > 0 && gRandom->Rndm() < fPars.p){
       if (fInTree->GetEntry(i+fNev) <= 0) 
         continue;
-      for (int j=0; j<GetNacestors(fNpart, fNcoll); ++j)
+      for (int j=0; j<GetNacestors(); ++j)
         pileup += (int)hNbd.GetRandom();
       hMultPileUp.Fill(mult+pileup);
       fInTree->GetEntry(i);
@@ -149,7 +148,7 @@ bool ToyMc::Run()
     hMultAll.Fill(mult + pileup);
 
     std::cout << "ToyMc::Run: event [" << i << "/" << fNev << "]:" 
-      << " Na = " << GetNacestors(fNpart, fNcoll)
+      << " Na = " << GetNacestors()
       << ", Npart = " << fNpart
       << ", Ncoll = " << fNcoll
       << ", mult = " << mult 

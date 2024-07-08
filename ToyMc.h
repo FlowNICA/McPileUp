@@ -22,18 +22,16 @@ class ToyMc
 {
 private:
   TString fOutName;
+  float fNpart, fNcoll, fB;
   std::unique_ptr<TTree> fInTree;
-  int fNpart, fNcoll;
-  double fB;
   TH1D hNbd, hMultAll, hMultPileUp, hMultSingle;
   TMCParameters fPars;
-  bool isInputRead, isNbdInit, isInit;
+  bool isInputRead, isNbdInit;
   int fNev;
 protected:
   double NBD(double n, double mu, double k);
-  bool ReadInput();
   bool InitNbd();
-  int GetNacestors(double npart, double ncoll){ return fPars.f * npart + (1-fPars.f)*ncoll; }
+  int GetNacestors(){ return fPars.f * fNpart + (1-fPars.f)*fNcoll; }
 public:
   ToyMc();
   ToyMc(TMCParameters _pars);
