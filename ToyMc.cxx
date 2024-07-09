@@ -150,15 +150,7 @@ bool ToyMc::Run()
 
     hMultAll.Fill(mult + pileup);
 
-    std::cout << "ToyMc::Run: event [" << i << "/" << fNev << "]:" 
-      << " Na = " << GetNacestors(fPars.f,fNpart,fNcoll)
-      << ", Npart = " << fNpart
-      << ", Ncoll = " << fNcoll
-      << ", mult = " << mult 
-      << ", pile-up = " << pileup 
-      << ", total = " << mult + pileup 
-      << ".\r" << std::flush;
-      // << "." << std::endl;
+    std::cout << "ToyMc::Run: event [" << i << "/" << fNev << "]" << "\r" << std::flush;
   }
 
   std::cout << std::endl;
