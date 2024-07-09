@@ -44,7 +44,7 @@ public:
   bool SetParameters(TMCParameters _pars);
   bool SetParameters(double f, int k, double mu, double p);
   bool SetNevents(int _nev){ fNev = _nev; return true; }
-  bool SetNancestors(std::function<int(double,double,double)> func){ fNaFunc = func; return true; } //wrapper for user-defined lambda function
+  bool SetNancestors(std::function<int(double,double,double)> func){ fNaFunc = func; return true; } //wrapper for user-defined function
 
   bool Print();
   bool Run();
