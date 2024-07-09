@@ -9,10 +9,12 @@ A simple toy model to simulate multiplicity with pile-up using MC-Glauber inform
 
 ## Installation
 
-``cd McPileUp``
-``mkdir build && cd build``
-``cmake ..``
-``make``
+```
+cd McPileUp
+mkdir build && cd build
+cmake ..
+make
+```
 
 ## Usage
 
