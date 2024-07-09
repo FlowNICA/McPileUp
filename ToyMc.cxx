@@ -112,6 +112,9 @@ bool ToyMc::Run()
   fInTree->SetBranchAddress("B",  &fB);
   fInTree->SetBranchAddress("Npart",  &fNpart);
   fInTree->SetBranchAddress("Ncoll",  &fNcoll);
+
+  float NpartMax = fInTree->GetMaximum("Npart");
+  float NcollMax = fInTree->GetMaximum("Ncoll");
   
   InitNbd();
   if (!isNbdInit){
@@ -130,14 +133,14 @@ bool ToyMc::Run()
     if (fInTree->GetEntry(i) <= 0)
       continue;
     
-    for (int j=0; j<GetNacestors(); ++j)
+    for (int j=0; j<GetNacestors(fPars.f,fNpart,fNcoll); ++j)
       mult += (int)hNbd.GetRandom();
 
     // Generating pile-up
     if (fPars.p > 0 && gRandom->Rndm() < fPars.p){
       if (fInTree->GetEntry(i+fNev) <= 0) 
         continue;
-      for (int j=0; j<GetNacestors(); ++j)
+      for (int j=0; j<GetNacestors(fPars.f,fNpart,fNcoll); ++j)
         pileup += (int)hNbd.GetRandom();
       hMultPileUp.Fill(mult+pileup);
       fInTree->GetEntry(i);
@@ -148,7 +151,7 @@ bool ToyMc::Run()
     hMultAll.Fill(mult + pileup);
 
     std::cout << "ToyMc::Run: event [" << i << "/" << fNev << "]:" 
-      << " Na = " << GetNacestors()
+      << " Na = " << GetNacestors(fPars.f,fNpart,fNcoll)
       << ", Npart = " << fNpart
       << ", Ncoll = " << fNcoll
       << ", mult = " << mult 

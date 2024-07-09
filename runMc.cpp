@@ -11,6 +11,30 @@
 
 int main(int argc, char **argv)
 {
+  if( argc < 2 ){
+    std::cerr << "No argumets provided!" << std::endl;
+    std::cerr << "./runGlauber macro.C" << std::endl;
+    std::cerr << "Arguments:" << std::endl;
+    std::cerr << "\tmacro.C - macro with main parameters" << std::endl;
+    std::cerr << std::endl;
+    return 1;
+  }
+  std::string macro{argv[1]};
+
+  TStopwatch timer;
+  timer.Start();
+
+  std::cout << "runMc: Executing "+macro << std::endl;
+  gROOT->Macro(macro.c_str());
+
+  timer.Stop();
+  timer.Print();
+  return 0;
+}
+
+/*
+int main(int argc, char **argv)
+{
   Int_t Nev, fK;
   TString inName, treeName, outName;
   Double_t fF, fMu, fP;
@@ -147,10 +171,28 @@ int main(int argc, char **argv)
     std::cerr << "\nERROR: cannot read input tree!" << std::endl;
     return 102;
   }
+
+  // Set Nancestors function
+  // It should be set as func(double f, double npart, double ncoll)
+  // Examples of the Na parametrisations:
+  //    Default : f*npart + (1-f)*ncoll
+  //    STAR    : f*ncoll + (1-f)*npart*0.5
+  //    PSD     : f - npart
+  //    Npart   : pow(npart, f)
+  //    Ncoll   : pow(ncoll, f)
+  // One can set a lambda function such as:
+  //    auto funcNa{[](double f, double npart, double ncoll){ return (int)(f*npart + (1-f)*ncoll); }};
+  // or a regular function before main(...):
+  //    int funcNa(double f, double npart, double ncoll){ return (int)(f*npart + (1-f)*ncoll); }
+  // And then set it using ToyMc::SetNancestors:
+  //    mc.SetNancestors(funcNa);
+
+  auto Na{[](double f, double npart, double ncoll){ return (int)(f*npart + (1-f)*ncoll); }};
   
   ToyMc mc;
   mc.SetParameters(fF, fK, fMu, fP);
   mc.SetInput(std::move(tree));
+  mc.SetNancestors(Na);
   mc.SetOutput(outName);
   mc.SetNevents(Nev);
 
@@ -164,3 +206,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+*/
