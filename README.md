@@ -27,4 +27,4 @@ The required parameters are as follows:
 - number of events (can be set as -1 or N). If -1 is set, the procedure will run over all events available in the input Mc-Glauber file
 - Parameters to construct multiplicity from Npart and Ncoll: f, mu, k.
 - Pile-up parameter p. It is the percentage of pile-up events: p=1. means 100% of events are pile-up events, p=0. means 0% of events are pile-up events.
-- Function for Nancestors. One can set any function with the following arguments: f(double f, double Npart, double Ncoll). See further explanation in the `config.c`.
+- Function for Nancestors. One can set any function with the following arguments: `f(double f, double Npart, double Ncoll)`. See further explanation in the `config.c`.
