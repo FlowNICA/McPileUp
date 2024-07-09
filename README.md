@@ -2,6 +2,8 @@
 
 A simple toy model to simulate multiplicity with pile-up using MC-Glauber information
 
+<img src="example.png" alt="Example of multiplicity distribution" style="height:291px; width:393px;"/>
+
 ## Requirements
 
 - C++14 or newer
