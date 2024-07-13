@@ -125,7 +125,7 @@ bool ToyMc::Run()
   int nevtree = fInTree->GetEntriesFast();
   if (fNev < 0 || fNev > nevtree*(1.-fPars.p)) fNev = nevtree*(1.-fPars.p);
 
-  int mult, pileup;
+  int mult, pileup, plp_count = 0;
   for (int i=0; i<fNev; ++i){
     mult = 0;
     pileup = 0;
@@ -138,10 +138,11 @@ bool ToyMc::Run()
 
     // Generating pile-up
     if (fPars.p > 0 && gRandom->Rndm() < fPars.p){
-      if (fInTree->GetEntry(i+fNev) <= 0) 
+      if (fInTree->GetEntry(fNev+plp_count) <= 0) 
         continue;
       for (int j=0; j<GetNacestors(fPars.f,fNpart,fNcoll); ++j)
         pileup += (int)hNbd.GetRandom();
+      plp_count++;
       hMultPileUp.Fill(mult+pileup);
       fInTree->GetEntry(i);
     } else {

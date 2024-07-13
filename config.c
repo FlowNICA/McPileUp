@@ -17,7 +17,7 @@ void config()
 
   // Set up ratio of pile-up events: 
   // (1. -> 100% of pile-up events, 0. -> 0% of pile-up events)
-  double p  = 0.15;
+  double p  = 0.03;
 
   // Set Nancestors function
   // It should be set as func(double f, double npart, double ncoll)
