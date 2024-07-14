@@ -24,9 +24,9 @@ private:
   TString fOutName;
   float fNpart, fNcoll, fB;
   std::unique_ptr<TTree> fInTree;
-  TH1D hNbd, hMultAll, hMultPileUp, hMultSingle;
+  TH1D hNbd, hMultAll, hMultPileUp, hMultSingle, hTrigEff;
   TMCParameters fPars;
-  bool isInputRead, isNbdInit;
+  bool isInputRead, isNbdInit, isTrEff;
   int fNev;
   std::function<int(double,double,double)> fNaFunc;
 protected:
@@ -45,6 +45,7 @@ public:
   bool SetParameters(double f, int k, double mu, double p);
   bool SetNevents(int _nev){ fNev = _nev; return true; }
   bool SetNancestors(std::function<int(double,double,double)> func){ fNaFunc = func; return true; } //wrapper for user-defined function
+  bool SetTriggerEfficiency(TH1D hist){ hTrigEff = hist; isTrEff = true; return true; }
 
   bool Print();
   bool Run();

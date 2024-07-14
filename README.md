@@ -2,7 +2,7 @@
 
 A simple toy model to simulate multiplicity with pile-up using MC-Glauber information
 
-<img src="example.png" alt="Example of multiplicity distribution" style="height:291px; width:393px;"/>
+<img src="example_files/example.png" alt="Example of multiplicity distribution" style="height:291px; width:393px;"/>
 
 ## Requirements
 

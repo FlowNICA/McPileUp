@@ -1,11 +1,15 @@
 void config()
 {
   // Set up input file from MC-Glauber
-  std::string inFileName = "/Users/petrparfenov/Soft/McGlauber/build/out_au3au3_30mb_500k.root";
+  std::string inFileName = "../example_files/out_au3au3_30mb_500k.root";
   std::string inTreeName = "nt_Au3_Au3";
 
   // Set up outpu file
-  std::string outFileName = "/Users/petrparfenov/Soft/McPileUp/build/out_test.root";
+  std::string outFileName = "./out_test.root";
+
+  // Set up file with trigger efficiency
+  std::string inTrigFileName = "../example_files/trigger_eff_example.root";
+  std::string inTrigHistName = "hEff";
 
   // Set up number of processed events
   int Nev = 500000;
@@ -46,6 +50,16 @@ void config()
     std::cerr << "\nERROR: cannot read input tree!" << std::endl;
     return;
   }
+  std::unique_ptr<TFile> fiTrEff{new TFile(inTrigFileName.c_str(), "read")};
+  if (!fi){
+    std::cerr << "\nERROR: cannot read input file with trigger efficiency!" << std::endl;
+    return;
+  }
+  std::unique_ptr<TH1D> hTrEff{(TH1D*)fiTrEff->Get(inTrigHistName.c_str())};
+  if (!hTrEff){
+    std::cerr << "\nERROR: cannot read input histogram with trigger efficiency!" << std::endl;
+    return;
+  }
 
   // Init main process
   ToyMc mc;
@@ -54,6 +68,7 @@ void config()
   mc.SetNancestors(Na);
   mc.SetOutput(outFileName.c_str());
   mc.SetNevents(Nev);
+  mc.SetTriggerEfficiency(*hTrEff);
 
   mc.Print();
   mc.Run();
