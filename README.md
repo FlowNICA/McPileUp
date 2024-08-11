@@ -6,7 +6,9 @@ A simple toy model to simulate multiplicity with pile-up using MC-Glauber inform
 
 ## Requirements
 
+- CMake 3.0 or newer
 - C++14 or newer
+- Boost (boost/random library)
 - ROOT ver. 6.20 or newer with MathMore library
 
 ## Installation

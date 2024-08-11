@@ -9,6 +9,12 @@
 #include <TTree.h>
 #include <TFile.h>
 #include <TRandom.h>
+#include <thread>
+#include <mutex>
+#include <random>
+#include <boost/random.hpp>
+#include <boost/math/distributions/negative_binomial.hpp>
+
 
 struct TMCParameters
 {
@@ -29,10 +35,14 @@ private:
   bool isInputRead, isNbdInit, isTrEff;
   int fNev;
   std::function<int(double,double,double)> fNaFunc;
+  std::mutex fMtx;
+  unsigned int fNthreads{std::thread::hardware_concurrency()};
+  std::vector<int> vNpart, vNcoll;
 protected:
   double NBD(double n, double mu, double k);
   bool InitNbd();
   int GetNacestors(double f, double npart, double ncoll){ return fNaFunc(f,npart,ncoll); }
+  bool BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop);
 public:
   ToyMc();
   ToyMc(TMCParameters _pars);
@@ -46,6 +56,9 @@ public:
   bool SetNevents(int _nev){ fNev = _nev; return true; }
   bool SetNancestors(std::function<int(double,double,double)> func){ fNaFunc = func; return true; } //wrapper for user-defined function
   bool SetTriggerEfficiency(TH1D hist){ hTrigEff = hist; isTrEff = true; return true; }
+
+
+  unsigned int GetNthreads(){ return fNthreads; }
 
   bool Print();
   bool Run();

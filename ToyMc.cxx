@@ -3,56 +3,57 @@
 ClassImp(ToyMc);
 
 ToyMc::ToyMc() : fInTree{nullptr},
-                fOutName{},
-                fNpart{-1.},
-                fNcoll{-1.},
-                fB{-1.},
-                hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
-                hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
-                hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
-                hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
-                hTrigEff{},
-                fPars{0.5, 10, 10.5, 0.},
-                isInputRead{false},
-                isNbdInit{false},
-                isTrEff{false},
-                fNev{-1}
-{}
+                 fOutName{},
+                 fNpart{-1.},
+                 fNcoll{-1.},
+                 fB{-1.},
+                 hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
+                 hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
+                 hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
+                 hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
+                 hTrigEff{},
+                 fPars{0.5, 10, 10.5, 0.},
+                 isInputRead{false},
+                 isNbdInit{false},
+                 isTrEff{false},
+                 fNev{-1}
+{
+}
 
 ToyMc::ToyMc(TMCParameters _pars) : fInTree{nullptr},
-                fOutName{},
-                fNpart{-1.},
-                fNcoll{-1.},
-                fB{-1.},
-                hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
-                hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
-                hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
-                hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
-                hTrigEff{},
-                fPars{},
-                isInputRead{false},
-                isNbdInit{false},
-                isTrEff{false},
-                fNev{-1}
+                                    fOutName{},
+                                    fNpart{-1.},
+                                    fNcoll{-1.},
+                                    fB{-1.},
+                                    hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
+                                    hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
+                                    hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
+                                    hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
+                                    hTrigEff{},
+                                    fPars{},
+                                    isInputRead{false},
+                                    isNbdInit{false},
+                                    isTrEff{false},
+                                    fNev{-1}
 {
   SetParameters(_pars);
 }
 
 ToyMc::ToyMc(double f, int k, double mu, double p) : fInTree{nullptr},
-                fOutName{},
-                fNpart{-1.},
-                fNcoll{-1.},
-                fB{-1.},
-                hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
-                hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
-                hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
-                hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
-                hTrigEff{},
-                fPars{},
-                isInputRead{false},
-                isNbdInit{false},
-                isTrEff{false},
-                fNev{-1}
+                                                     fOutName{},
+                                                     fNpart{-1.},
+                                                     fNcoll{-1.},
+                                                     fB{-1.},
+                                                     hNbd{"hNbd", "N_{part};N_{part};counts", 10000, 0., 10000.},
+                                                     hMultAll{"hMultAll", "All;N_{ch};counts", 10000, 0., 10000.},
+                                                     hMultPileUp{"hMultPileUp", "Pile-up;N_{ch};counts", 10000, 0., 10000.},
+                                                     hMultSingle{"hMultSingle", "Single;N_{ch};counts", 10000, 0., 10000.},
+                                                     hTrigEff{},
+                                                     fPars{},
+                                                     isInputRead{false},
+                                                     isNbdInit{false},
+                                                     isTrEff{false},
+                                                     fNev{-1}
 {
   SetParameters(f, k, mu, p);
 }
@@ -74,106 +75,90 @@ bool ToyMc::SetParameters(double f, int k, double mu, double p)
   return true;
 }
 
-double ToyMc::NBD(double n, double mu, double k)
-{
-  double func1, func2, func;
-
-  if (n+k > 100.0) 
-  {
-    // log method for handling large numbers
-    func1  = TMath::LnGamma(n + k)- TMath::LnGamma(n + 1.)- TMath::LnGamma(k);
-    func2  = n * TMath::Log(mu/k) - (n + k) * TMath::Log(1.0 + mu/k);
-    func = TMath::Exp(func1 + func2);
-  } 
-  else 
-  {
-    func1  = TMath::Gamma(n + k) / ( TMath::Gamma(n + 1.) * TMath::Gamma(k) );
-    func2  = n * TMath::Log(mu/k) - (n + k) * TMath::Log(1.0 + mu/k);
-    func = func1 * TMath::Exp(func2);
-  }
-  return func;
-}
-
-bool ToyMc::InitNbd()
-{
-  if (isNbdInit)
-    return false;
-
-  int nbins = ((fPars.mu+1.)*3 < 10) ? 10 : (int)(fPars.mu+1.)*3;
-  for (int i=0; i<nbins; ++i){
-    double val = NBD(i, fPars.mu, fPars.k);
-    if (val>1e-10)
-      hNbd.SetBinContent(i+1, val);
-  }
-  isNbdInit = true;
-
-  return true;
-}
-
 bool ToyMc::Run()
 {
   if (!fInTree)
     return false;
 
-  fInTree->SetBranchAddress("B",  &fB);
-  fInTree->SetBranchAddress("Npart",  &fNpart);
-  fInTree->SetBranchAddress("Ncoll",  &fNcoll);
+  fInTree->SetBranchAddress("B", &fB);
+  fInTree->SetBranchAddress("Npart", &fNpart);
+  fInTree->SetBranchAddress("Ncoll", &fNcoll);
 
   float NpartMax = fInTree->GetMaximum("Npart");
   float NcollMax = fInTree->GetMaximum("Ncoll");
-  
-  InitNbd();
-  if (!isNbdInit){
-    std::cerr << "ToyMc::Run: ERROR: NBD distribution was incorrect!" << std::endl;
-    return false;
-  }
-  
+
   int nevtree = fInTree->GetEntriesFast();
-  if (fNev < 0 || fNev > nevtree*(1.-fPars.p)) fNev = nevtree*(1.-fPars.p);
+  if (fNev < 0 || fNev > nevtree)
+    fNev = nevtree;
 
   int mult, pileup, plp_count = 0;
-  for (int i=0; i<fNev; ++i){
+  for (int i = 0; i < fNev; ++i)
+  {
     mult = 0;
     pileup = 0;
 
     if (fInTree->GetEntry(i) <= 0)
       continue;
-    
-    for (int j=0; j<GetNacestors(fPars.f,fNpart,fNcoll); ++j)
-      mult += (int)hNbd.GetRandom();
-
-    // Generating pile-up
-    if (fPars.p > 0 && gRandom->Rndm() < fPars.p){
-      if (fInTree->GetEntry(fNev+plp_count) <= 0) 
-        continue;
-      for (int j=0; j<GetNacestors(fPars.f,fNpart,fNcoll); ++j)
-        pileup += (int)hNbd.GetRandom();
-      plp_count++;
-      if (isTrEff){
-        if (gRandom->Rndm() < hTrigEff.GetBinContent(hTrigEff.FindBin(mult+pileup))){
-          hMultPileUp.Fill(mult+pileup);
-          fInTree->GetEntry(i);
-        }
-      }
-    } else {
-      if (isTrEff){
-        if (gRandom->Rndm() < hTrigEff.GetBinContent(hTrigEff.FindBin(mult))){
-          hMultSingle.Fill(mult);
-        }
-      }
-    }
-
-    if (isTrEff){
-      if (gRandom->Rndm() < hTrigEff.GetBinContent(hTrigEff.FindBin(mult+pileup))){
-        hMultAll.Fill(mult + pileup);
-      }
-    }
-
-    std::cout << "ToyMc::Run: event [" << i << "/" << fNev << "]" << "\r" << std::flush;
+    vNpart.push_back(fNpart);
+    vNcoll.push_back(fNcoll);
   }
 
-  std::cout << std::endl;
+  std::vector<std::thread> v_thr;
+  for (unsigned int i = 0; i < fNthreads; ++i)
+  {
+    int n_part = (int)(fNev / fNthreads);
+    int i_start = i * n_part;
+    int i_stop = (int)((i + 1) * n_part * (1. - fPars.p));
+    int p_start = i_stop;
+    int p_stop = (i + 1) * n_part;
+    v_thr.emplace_back([&]
+                       { ToyMc::BuildMultiplicity(fPars.f, fPars.mu, fPars.k, fPars.p, i_start, i_stop, p_start, p_stop); });
+  }
+  for (auto &thread : v_thr)
+    thread.join();
 
+  return true;
+}
+
+bool ToyMc::BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop)
+{
+
+  boost::mt19937 rngnum;
+  boost::random::negative_binomial_distribution<int> nbd(k, (double)(k / (k + mu)));
+  std::uniform_real_distribution<double> unidist(0., 1.);
+  int plp_counter = plp_start;
+  for (int i = i_start; i < i_stop; i++)
+  {
+    const int Na = int(GetNacestors(f, vNpart.at(i), vNcoll.at(i)));
+    int nHits{0}, nPlp{0};
+    for (int j = 0; j < Na; j++)
+      nHits += nbd(rngnum);
+    if (p > 1e-10 && unidist(rngnum) <= p)
+    {
+      const int Na1 = int(GetNacestors(f, vNpart.at(plp_counter), vNcoll.at(plp_counter)));
+      for (int jplp = 0; jplp < Na1; jplp++)
+        nPlp += (int)nbd(rngnum);
+      plp_counter++;
+      nHits += nPlp;
+      std::lock_guard<std::mutex> guard(fMtx);
+      if (!isTrEff)
+        hMultPileUp.Fill(nHits);
+      if (isTrEff && unidist(rngnum) < hTrigEff.GetBinContent(hTrigEff.FindBin(nHits)))
+        hMultPileUp.Fill(nHits);
+    }
+    else
+    {
+      std::lock_guard<std::mutex> guard(fMtx);
+      if (!isTrEff)
+        hMultSingle.Fill(nHits);
+      if (isTrEff && unidist(rngnum) < hTrigEff.GetBinContent(hTrigEff.FindBin(nHits)))
+        hMultSingle.Fill(nHits);
+    }
+    if (!isTrEff)
+      hMultAll.Fill(nHits);
+    if (isTrEff && unidist(rngnum) < hTrigEff.GetBinContent(hTrigEff.FindBin(nHits)))
+      hMultAll.Fill(nHits);
+  }
   return true;
 }
 
@@ -198,6 +183,8 @@ bool ToyMc::Write()
 bool ToyMc::Print()
 {
   std::cout << "ToyMc::Print:" << std::endl;
+  std::cout << "\tNumber of threads: " << fNthreads << std::endl;
+  std::cout << "\tNumber of events:  " << fNev << std::endl;
   std::cout << "\tInput parameters:" << std::endl;
   std::cout << "\t\tf  : " << fPars.f << std::endl;
   std::cout << "\t\tk  : " << fPars.k << std::endl;

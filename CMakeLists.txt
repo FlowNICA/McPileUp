@@ -12,6 +12,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
 find_package(ROOT REQUIRED COMPONENTS MathCore MathMore RIO Hist Tree Net)
+find_package(Boost REQUIRED COMPONENTS random)
 
 include(${ROOT_USE_FILE})
 
@@ -21,6 +22,7 @@ set(INCLUDE_DIRECTORIES
 )
 
 include_directories(${INCLUDE_DIRECTORIES})
+include_directories(${Boost_INCLUDE_DIRS})
 #---set (CMAKE_CXX_STANDARD 11)
 add_definitions(${ROOT_CXX_FLAGS})
 
@@ -34,7 +36,7 @@ ROOT_GENERATE_DICTIONARY(G__McPileUp
 
 #---Create a shared library
 add_library(McPileUp SHARED ToyMc.cxx G__McPileUp.cxx)
-target_link_libraries(McPileUp ${ROOT_LIBRARIES})
+target_link_libraries(McPileUp ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(runMc runMc.cpp)
-target_link_libraries(runMc McPileUp)
+target_link_libraries(runMc McPileUp ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
