@@ -11,15 +11,15 @@
 #include <TRandom.h>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <random>
-#include <boost/random.hpp>
-#include <boost/math/distributions/negative_binomial.hpp>
-
+#include <vector>
+#include <deque>
 
 struct TMCParameters
 {
   double f;
-  int k;
+  double k;
   double mu;
   double p;
 };
@@ -32,17 +32,15 @@ private:
   std::unique_ptr<TTree> fInTree;
   TH1D hNbd, hMultAll, hMultPileUp, hMultSingle, hTrigEff;
   TMCParameters fPars;
-  bool isInputRead, isNbdInit, isTrEff;
+  bool isInputRead, isNbdInit, isTrEff, fUseNbd;
   int fNev;
   std::function<int(double,double,double)> fNaFunc;
   std::mutex fMtx;
   unsigned int fNthreads{std::thread::hardware_concurrency()};
   std::vector<int> vNpart, vNcoll;
 protected:
-  double NBD(double n, double mu, double k);
-  bool InitNbd();
   int GetNacestors(double f, double npart, double ncoll){ return fNaFunc(f,npart,ncoll); }
-  bool BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop);
+  bool BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop, std::atomic<int> &_progress);
 public:
   ToyMc();
   ToyMc(TMCParameters _pars);
@@ -52,11 +50,12 @@ public:
   bool SetInput(std::unique_ptr<TTree> tree){ fInTree = std::move(tree); isInputRead = true; return true; }
   bool SetOutput(TString _outName){ fOutName = _outName;  return true; }
   bool SetParameters(TMCParameters _pars);
-  bool SetParameters(double f, int k, double mu, double p);
+  bool SetParameters(double f, double k, double mu, double p);
   bool SetNevents(int _nev){ fNev = _nev; return true; }
   bool SetNancestors(std::function<int(double,double,double)> func){ fNaFunc = func; return true; } //wrapper for user-defined function
   bool SetTriggerEfficiency(TH1D hist){ hTrigEff = hist; isTrEff = true; return true; }
-
+  bool UseGamma(){ fUseNbd = false; return true; }
+  bool UseNbd(){ fUseNbd = true; return true; }
 
   unsigned int GetNthreads(){ return fNthreads; }
 

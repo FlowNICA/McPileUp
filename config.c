@@ -15,9 +15,9 @@ void config()
   int Nev = 500000;
 
   // Set up parameters for multiplicity sampling
-  double f  = 0.8;
+  double f  = 0.9;
   double mu = 0.5;
-  int    k  = 10;
+  double k  = 1;
 
   // Set up ratio of pile-up events: 
   // (1. -> 100% of pile-up events, 0. -> 0% of pile-up events)
@@ -38,6 +38,7 @@ void config()
   // And then set it using ToyMc::SetNancestors:
   //    mc.SetNancestors(funcNa);
   auto Na{[](double f, double npart, double ncoll){ return (int)(f*npart + (1-f)*ncoll); }};
+  // auto Na{[](double f, double npart, double ncoll){ return (int)(npart); }};
   
   // Read input
   std::unique_ptr<TFile> fi{new TFile(inFileName.c_str(), "read")};
@@ -69,6 +70,7 @@ void config()
   mc.SetOutput(outFileName.c_str());
   mc.SetNevents(Nev);
   mc.SetTriggerEfficiency(*hTrEff);
+  mc.UseGamma();
 
   mc.Print();
   mc.Run();
