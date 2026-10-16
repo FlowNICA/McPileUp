@@ -29,7 +29,7 @@ An example of such macro: `McPileUp/config.c`
 The required parameters are as follows:
 - file name for the input MC-Glauber file.
 - name of the TTree (or TNtuple) in the input file.
-- number of events (can be set as -1 or N). If -1 is set, the procedure will run over all events available in the input Mc-Glauber file
+- number of events (can be set as -1 or N). If -1 is set, the procedure will run over all events available in the input Mc-Glauber file. Output histograms contain exactly Nev entries (before trigger efficiency is applied). Pile-up partners are taken from an additional ~p*Nev entries of the input tree, so the tree must have at least Nev*(1+p) entries; otherwise Nev is reduced accordingly and a warning is printed
 - Parameters to construct multiplicity from Npart and Ncoll: f, mu, k.
 - Pile-up parameter p. It is the percentage of pile-up events: p=1. means 100% of events are pile-up events, p=0. means 0% of events are pile-up events.
 - Function for Nancestors. One can set any function with the following arguments: `func(double f, double Npart, double Ncoll)`. See further explanation in the `config.c`.

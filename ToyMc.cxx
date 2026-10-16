@@ -87,61 +87,60 @@ bool ToyMc::Run()
   fInTree->SetBranchAddress("Npart", &fNpart);
   fInTree->SetBranchAddress("Ncoll", &fNcoll);
 
-  float NpartMax = fInTree->GetMaximum("Npart");
-  float NcollMax = fInTree->GetMaximum("Ncoll");
+  const int nevtree = fInTree->GetEntries();
 
-  int nevtree = fInTree->GetEntriesFast();
-  if (fNev < 0 || fNev > nevtree)
-    fNev = nevtree;
-
-  int mult, pileup, plp_count = 0;
-  for (int i = 0; i < fNev; ++i)
+  // Every main event fills the histograms once, so fNev main events are needed.
+  // Pile-up partners are taken from a separate pool of ~p*fNev tree entries.
+  if (fNev < 0 || fNev + (int)std::ceil(fPars.p * fNev) > nevtree)
   {
-    mult = 0;
-    pileup = 0;
+    const int nevmax = (int)(nevtree / (1. + fPars.p));
+    if (fNev >= 0)
+      std::cerr << "\tToyMc::Run: WARNING: requested " << fNev << " events, but the input tree (" << nevtree
+                << " entries) allows only " << nevmax << " events with p = " << fPars.p << std::endl;
+    fNev = nevmax;
+  }
+  const int nplp = (fPars.p > 1e-10) ? std::max(1, (int)std::ceil(fPars.p * fNev)) : 0;
 
+  vNpart.clear();
+  vNcoll.clear();
+  for (int i = 0; i < nevtree && (int)vNpart.size() < fNev + nplp; ++i)
+  {
     if (fInTree->GetEntry(i) <= 0)
       continue;
     vNpart.push_back(fNpart);
     vNcoll.push_back(fNcoll);
   }
-
-  std::vector<std::thread> v_thr;
-  std::deque<std::atomic<int>> v_progress;
-  for (unsigned int i = 0; i < fNthreads; ++i)
+  if ((int)vNpart.size() < fNev + nplp)
   {
-    int n_part = (int)(fNev / fNthreads);
-    int i_start = i * n_part;
-    int i_stop = (int)((i + 1) * n_part * (1. - fPars.p));
-    int p_start = i_stop;
-    int p_stop = (i + 1) * n_part;
-    v_progress.emplace_back(0);
-    v_thr.emplace_back([&]
-                       { ToyMc::BuildMultiplicity(fPars.f, fPars.mu, fPars.k, fPars.p, i_start, i_stop, p_start, p_stop, std::ref(v_progress[i])); });
+    std::cerr << "\tToyMc::Run: ERROR: could only read " << vNpart.size() << " entries from the input tree" << std::endl;
+    return false;
   }
 
-  bool isOver = false;
-  int tot_progress, tot_denum;
-  while (not isOver)
+  // Main events: [0, fNev), pile-up pool: [fNev, fNev + nplp)
+  std::atomic<int> plp_counter{0};
+  std::vector<std::thread> v_thr;
+  std::deque<std::atomic<int>> v_progress;
+  const int n_part = fNev / fNthreads;
+  const int n_rest = fNev % fNthreads;
+  for (unsigned int i = 0; i < fNthreads; ++i)
   {
-    isOver = true;
+    const int i_start = i * n_part + std::min<int>(i, n_rest);
+    const int i_stop = i_start + n_part + ((int)i < n_rest ? 1 : 0);
+    v_progress.emplace_back(0);
+    std::atomic<int> &progress = v_progress.back();
+    v_thr.emplace_back([this, i_start, i_stop, nplp, &plp_counter, &progress]
+                       { BuildMultiplicity(fPars.f, fPars.mu, fPars.k, fPars.p, i_start, i_stop, fNev, fNev + nplp, plp_counter, progress); });
+  }
+
+  int tot_progress = 0;
+  while (tot_progress < fNev)
+  {
     tot_progress = 0;
-    tot_denum = 0;
-    std::cout << "\tToyMc::Run: Constructing multiplicity, progress: ";
-    for (int j = 0; j < fNthreads; ++j)
-    {
-      if (v_progress[j].load() == 0)
-        continue;
-      tot_progress += v_progress[j].load();
-      tot_denum++;
-    }
-    if (tot_denum > 0)
-      tot_progress /= tot_denum;
-    std::cout << tot_progress << "% \r" << std::flush;
-    if (tot_progress < 100)
-      isOver = false;
-    std::chrono::milliseconds dura(200);
-    std::this_thread::sleep_for(dura);
+    for (auto &prog : v_progress)
+      tot_progress += prog.load();
+    std::cout << "\tToyMc::Run: Constructing multiplicity, progress: " << (fNev > 0 ? (long)tot_progress * 100 / fNev : 100) << "% \r" << std::flush;
+    if (tot_progress < fNev)
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
   std::cout << "\t                                                                                                \r" << std::flush;
 
@@ -151,48 +150,43 @@ bool ToyMc::Run()
   return true;
 }
 
-bool ToyMc::BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop, std::atomic<int> &_progress)
+bool ToyMc::BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop, std::atomic<int> &plp_counter, std::atomic<int> &_progress)
 {
   std::random_device rd;
   std::mt19937 rngnum(rd());
   std::uniform_real_distribution<float> unidist(0., 1.);
   std::gamma_distribution<> gammadst((float)((mu * k) / (mu + k)), (float)((k + mu) / k));
   std::negative_binomial_distribution<> nbddst(k, (float)(k / (k + mu)));
-  int plp_counter = plp_start;
+  const int n_plp = plp_stop - plp_start;
   for (int i = i_start; i < i_stop; i++)
   {
-    _progress.store((i - i_start)*100/(i_stop - i_start)+1);
     const int Na = int(GetNacestors(f, vNpart.at(i), vNcoll.at(i)));
     float nHits{0}, nPlp{0};
     for (int j = 0; j < Na; j++)
       if (fUseNbd) nHits += nbddst(rngnum);
       else nHits += gammadst(rngnum);
-    if (p > 1e-10 && unidist(rngnum) <= p)
+    const bool isPileUp = n_plp > 0 && p > 1e-10 && unidist(rngnum) <= p;
+    if (isPileUp)
     {
-      const int Na1 = int(GetNacestors(f, vNpart.at(plp_counter), vNcoll.at(plp_counter)));
+      // The pool holds ~p*Nev entries; wrap around if fluctuations exceed it
+      const int iplp = plp_start + plp_counter.fetch_add(1) % n_plp;
+      const int Na1 = int(GetNacestors(f, vNpart.at(iplp), vNcoll.at(iplp)));
       for (int jplp = 0; jplp < Na1; jplp++)
         if (fUseNbd) nPlp += nbddst(rngnum);
         else nPlp += gammadst(rngnum);
-      plp_counter++;
       nHits += nPlp;
-      std::lock_guard<std::mutex> guard(fMtx);
-      if (!isTrEff)
-        hMultPileUp.Fill(nHits);
-      if (isTrEff && unidist(rngnum) < hTrigEff.GetBinContent(hTrigEff.FindBin(nHits)))
-        hMultPileUp.Fill(nHits);
     }
-    else
+    const bool isTriggered = !isTrEff || unidist(rngnum) < hTrigEff.GetBinContent(hTrigEff.FindBin(nHits));
+    if (isTriggered)
     {
       std::lock_guard<std::mutex> guard(fMtx);
-      if (!isTrEff)
+      if (isPileUp)
+        hMultPileUp.Fill(nHits);
+      else
         hMultSingle.Fill(nHits);
-      if (isTrEff && unidist(rngnum) < hTrigEff.GetBinContent(hTrigEff.FindBin(nHits)))
-        hMultSingle.Fill(nHits);
+      hMultAll.Fill(nHits);
     }
-    if (!isTrEff)
-      hMultAll.Fill(nHits);
-    if (isTrEff && unidist(rngnum) < hTrigEff.GetBinContent(hTrigEff.FindBin(nHits)))
-      hMultAll.Fill(nHits);
+    _progress.store(i - i_start + 1);
   }
   return true;
 }

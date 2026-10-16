@@ -15,6 +15,10 @@
 #include <random>
 #include <vector>
 #include <deque>
+#include <chrono>
+#include <cmath>
+#include <algorithm>
+#include <functional>
 
 struct TMCParameters
 {
@@ -40,7 +44,7 @@ private:
   std::vector<int> vNpart, vNcoll;
 protected:
   int GetNacestors(double f, double npart, double ncoll){ return fNaFunc(f,npart,ncoll); }
-  bool BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop, std::atomic<int> &_progress);
+  bool BuildMultiplicity(double f, double mu, double k, double p, int i_start, int i_stop, int plp_start, int plp_stop, std::atomic<int> &plp_counter, std::atomic<int> &_progress);
 public:
   ToyMc();
   ToyMc(TMCParameters _pars);
